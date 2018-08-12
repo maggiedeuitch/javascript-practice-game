@@ -7,53 +7,57 @@ console.log("linked");
         const width = 500;
         // var message = 'Bouncing';
         
-        // player 
-        let x = 50;
-        let spdX = 30;
-        let y = 40;
-        let spdY = 5;
-        const name = 'P';
+        let player = {
+            x : 50,
+            spdX : 30,
+            y : 40,
+            spdY : 5,
+            name : "P",
+        };
 
+        let enemy = {
+            x : 150,
+            spdX : 10,
+            y : 350,
+            spdY : 15,
+            name : "E"
+        };
 
-        let enemy_x = 150;
-        let enemy_spdX = 10;
-        let enemy_y = 350;
-        let enemy_spdY = 15;
-        let enemy_name = 'E';
+        let enemy2 = {
+            x : 250,
+            spdX : 10,
+            y : 450,
+            spdY : 15,
+            name : "E"
+        };
+
+        setInterval(update, 40);
         
-        setInterval(update, 80);
-        
+        function updateEntity (entity) {
+        //entity movement
+            entity.x += entity.spdX;
+            entity.y += entity.spdY;
+            ctx.fillText(entity.name, entity.x, entity.y);
+            // console.log(`${entity} moving`, x);
+        //collision detection to change the direction of entity when it hits the boundaries
+            if(entity.x < 0 || entity.x > width) {
+                console.log('Out of Bounds');
+                entity.spdX = -entity.spdX;
+            }
+            if(entity.y < 0 || entity.y > height) {
+                entity.spdY = -entity.spdY;
+            }
+        }
+
     function update() {
-    //player movement
-        x += spdX;
-        y += spdY;
-        ctx.fillText(name, x, y);
-        console.log("player moving", x);
-    //collision detection to change the direction of player when it hits the boundaries
-        if(x < 0 || x > width) {
-            console.log('Out of Bounds');
-            spdX = -spdX;
-        }
-        if(y < 0 || y > height) {
-            spdY = -spdY;
-        }
-    
-    //enemy movement
-        enemy_x += enemy_spdX;
-        enemy_y += enemy_spdY;
-        ctx.fillText(enemy_name, enemy_x, enemy_y);
-        console.log("enemy moving", enemy_x);
+        updateEntity(player);
+        updateEntity(enemy);
+        updateEntity(enemy2);
 
-    //enemy collision to change direction when it hits the boundaries
-        if(enemy_x < 0 || enemy_x > width) {
-            enemy_spdX = -enemy_spdX;
-        }
-        if(enemy_y < 0 || enemy_y > height) {
-            enemy_spdY = -enemy_spdY;
-        }
-        
     };
-    
+
+
+
     /*	Comment Section
     
     //1. Modify Settings =
