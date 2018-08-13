@@ -17,40 +17,40 @@ const player = {
 //enemyList stores all the enemies in an object
 let enemyList = {};
 
-const enemy = {
-    x : 150,
-    spdX : 10,
-    y : 350,
-    spdY : 15,
-    name : "E",
-    id: "E1"
-};
-//create the first item in enemyList
-enemyList["E1"] = enemy;
+enemy("E1", 150, 200, 7, 9);
+enemy("E2", 300, 120, 5, -7);
+enemy("E3", 425, 320, 10, 20);
 
-const enemy2 = {
-    x : 250,
-    spdX : 10,
-    y : 450,
-    spdY : 15,
-    name : "E",
-    id: "E2"
-};
 
-enemyList["E2"] = enemy2;
-console.log(enemyList);
+//Distance Formula and Pythagorean Theorem
+function getDistanceBetweenEntities(entity1, entity2) {
+    //return distance(number)
+    let vx = entity1.x - entity2.x;
+    let vy = entity1.y - entity2.y;
+    return Math.sqrt(vx*vx + vy*vy);
+}
 
-const enemy3 = {
-    x : 230,
-    spdX : 5,
-    y : 70,
-    spdY : -8,
-    name : "E",
-    id: "E3"
-};
+function testCollision (entity1, entity2) {
+    //return if colliding (true/false)
+    let distance = getDistanceBetweenEntities(entity1, entity2);
+    return distance < 30;
 
-enemyList["E3"] = enemy3;
-console.log(enemyList);
+}
+
+
+//function that creates a new enemy and adds to enemyList
+function enemy (id, x, y, spdX, spdY) {
+    let enemy = {
+        x:x,
+        spdX: spdX,
+        y:y,
+        spdY:spdY,
+        name: "E",
+        id:id
+    };
+    //create the item in enemyList
+    enemyList[id] = enemy;
+}
 
 setInterval(update, 40);
 
@@ -74,12 +74,19 @@ function update() {
 // clears rectangle in canvas so the fillText doesn't just repeat
     ctx.clearRect(0, 0, width, height);
 
-    updateEntity(player);
 
     //loop through enemyList to update enemies
     for (let key in enemyList) {
         updateEntity(enemyList[key]);
+        const collision = testCollision(player, enemyList[key]);
+        if(collision) {
+            console.log("collision!");
+            
+        }
     }
+
+    updateEntity(player);
+
 
 };
 
