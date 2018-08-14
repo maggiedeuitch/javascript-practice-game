@@ -8,7 +8,9 @@ const width = 500;
 
 //returns time in milliseconds
 let timeWhenGameStarted = Date.now();
-// var message = 'Bouncing';
+
+//every time game is updated, framecount is updated by 1
+let frameCount = 0;
 
 const player = {
     x : 50,
@@ -70,10 +72,19 @@ const enemy = function(id, x, y, spdX, spdY, width, height) {
     enemyList[id] = enemy1;
 }
 
-//moves player (x and y) with mouse
+//moves player (x and y) with mouse and makes sure it can't move out of bounds
 document.onmousemove = function(mouse) {
-    let mouseX = mouse.clientX;
-    let mouseY = mouse.clientY;
+    let mouseX = mouse.clientX - document.getElementById("ctx").getBoundingClientRect().left;
+    let mouseY = mouse.clientY - document.getElementById("ctx").getBoundingClientRect().top;
+
+    if (mouseX < player.width/2)
+        mouseX = player.width/2;
+    if (mouseX > width - player.width/2)
+        mouseX = width - player.width/2;
+    if (mouseY < player.height/2)
+        mouseY = player.height/2;
+    if (mouseY > height - player.height/2)
+        mouseY = height - player.height/2;
 
     player.x = mouseX;
     player.y = mouseY;
@@ -119,6 +130,10 @@ const drawEntity = function(entity) {
 const update = function() {
 // clears rectangle in canvas so the fillText doesn't just repeat
     ctx.clearRect(0, 0, width, height);
+    frameCount++;
+
+    if(frameCount % 100 === 0) //updates every 4sec
+        randomlyGenerateEnemy();
 
 
     //loop through enemyList to update enemies
@@ -129,28 +144,43 @@ const update = function() {
         if(collision) {
             console.log("collision!");
             player.hp -= 1;
-            if(player.hp <= 0) {
-                let timeSurvived = Date.now() - timeWhenGameStarted;
-                console.log("You lost! You survived for "+ timeSurvived + " ms.");
-                timeWhenGameStarted = Date.now();
-                player.hp = 10;
-                
-
-            }
-            
         }
+    }
+
+    if(player.hp <= 0) {
+        let timeSurvived = Date.now() - timeWhenGameStarted;
+        console.log("You lost! You survived for "+ timeSurvived + " ms.");
+        timeWhenGameStarted = Date.now();
+        startNewGame();
     }
 
     drawEntity(player);
     ctx.fillText(player.hp + "HP", 0, 30);
 
-
 }
 
+const startNewGame = function () {
+    player.hp = 10;
+    timeWhenGameStarted = Date.now();
+    frameCount = 0;
+    enemyList = {};
+    randomlyGenerateEnemy();
+    randomlyGenerateEnemy();
+    randomlyGenerateEnemy();
+}
 
-enemy("E1", 150, 200, 7, 9, 30, 30);
-enemy("E2", 300, 120, 5, -7, 20, 20);
-enemy("E3", 425, 320, 10, 20, 40, 10);
+const randomlyGenerateEnemy = function() {
+    let x = Math.random()*width;
+    let y = Math.random()*height;
+    let spdX = 5 + Math.random()*5;
+    let spdY = 5 + Math.random()*5;
+    let enemyHeight = 10 + Math.random()*30;
+    let enemyWidth = 10 + Math.random()*30;
+    let id = Math.random();
+    enemy(id, x, y, spdX, spdY, enemyWidth, enemyHeight);
+}
+
+startNewGame();
 
 setInterval(update, 40);
 
