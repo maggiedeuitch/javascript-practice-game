@@ -24,7 +24,15 @@ const player = {
     width: 20,
     height: 20,
     color:"green",
-    attackSpeed: 1
+    attackSpeed: 1,
+    attackCounter: 0,
+
+    //user keyboard interaction
+    pressingDown: false,
+    pressingUp: false,
+    pressingLeft: false,
+    pressingRight: false
+
 };
 //enemyList stores all the enemies in an object
 let enemyList = {};
@@ -170,22 +178,22 @@ const randomlyGenerateBullet = function () {
 
 
 //moves player (x and y) with mouse and makes sure it can't move out of bounds
-document.onmousemove = function(mouse) {
-    let mouseX = mouse.clientX - document.getElementById("ctx").getBoundingClientRect().left;
-    let mouseY = mouse.clientY - document.getElementById("ctx").getBoundingClientRect().top;
+// document.onmousemove = function(mouse) {
+//     let mouseX = mouse.clientX - document.getElementById("ctx").getBoundingClientRect().left;
+//     let mouseY = mouse.clientY - document.getElementById("ctx").getBoundingClientRect().top;
 
-    if (mouseX < player.width/2)
-        mouseX = player.width/2;
-    if (mouseX > width - player.width/2)
-        mouseX = width - player.width/2;
-    if (mouseY < player.height/2)
-        mouseY = player.height/2;
-    if (mouseY > height - player.height/2)
-        mouseY = height - player.height/2;
+//     if (mouseX < player.width/2)
+//         mouseX = player.width/2;
+//     if (mouseX > width - player.width/2)
+//         mouseX = width - player.width/2;
+//     if (mouseY < player.height/2)
+//         mouseY = player.height/2;
+//     if (mouseY > height - player.height/2)
+//         mouseY = height - player.height/2;
 
-    player.x = mouseX;
-    player.y = mouseY;
-}
+//     player.x = mouseX;
+//     player.y = mouseY;
+// }
 
 
 const updateEntity = function(entity) {
@@ -224,6 +232,58 @@ const drawEntity = function(entity) {
     ctx.restore();
 }
 
+//user shoots bullets on mouse click
+document.onclick = function(mouse){
+    if(player.attackCounter > 25) {
+        randomlyGenerateBullet();
+        player.attackCounter = 0;
+    }
+}
+
+//user movement with keyboard
+document.onkeydown = function (event) {
+    if (event.keyCode === 68) //d
+        player.pressingRight = true;
+    if (event.keyCode === 83) //s
+        player.pressingDown = true;
+    if (event.keyCode === 65) //a
+        player.pressingLeft = true;
+    if (event.keyCode === 87) //w
+        player.pressingUp = true;
+}
+
+document.onkeyup = function(event) {
+    if (event.keyCode === 68) //d
+        player.pressingRight = false;
+    if (event.keyCode === 83) //s
+        player.pressingDown = false;
+    if (event.keyCode === 65) //a
+        player.pressingLeft = false;
+    if (event.keyCode === 87) //w
+        player.pressingUp = false;
+}
+
+const updatePlayerPosition = function() {
+    if(player.pressingRight)
+        player.x += 10;
+    if (player.pressingLeft)
+        player.x += -10;
+    if (player.pressingDown)
+        player.y += 10;
+    if (player.pressingUp)
+        player.y += -10;
+
+//out of bounds for player
+if(player.x < player.width/2)
+    player.x = player.width/2;
+if (player.x > width - player.width / 2)
+    player.x = width - player.width / 2;
+if (player.y < player.height / 2)
+    player.y = player.height / 2;
+if (player.y > height - player.height / 2)
+    player.y = height - player.height / 2;
+}
+
 const update = function() {
 // clears rectangle in canvas so the fillText doesn't just repeat
     ctx.clearRect(0, 0, width, height);
@@ -234,8 +294,8 @@ const update = function() {
         randomlyGenerateEnemy();
     if (frameCount % 75 === 0) //updates every 3sec
         randomlyGenerateUpgrade();
-    if (frameCount % Math.round(25/player.attackSpeed) === 0) //updates every 1sec
-        randomlyGenerateBullet();
+    
+    player.attackCounter += player.attackSpeed;
 
     for(let key in bulletList) {
         updateEntity(bulletList[key]);
@@ -289,7 +349,7 @@ const update = function() {
         timeWhenGameStarted = Date.now();
         startNewGame();
     }
-
+    updatePlayerPosition();
     drawEntity(player);
     ctx.fillText(player.hp + "HP", 0, 30);
     ctx.fillText("Score: " + score, 200, 30);
