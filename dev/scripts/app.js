@@ -1,6 +1,6 @@
 console.log("linked");
 
-// <script>
+//creates canvas in DOM
 const ctx = document.getElementById("ctx").getContext("2d");
 ctx.font = '30px Arial';
 const height = 500;
@@ -12,6 +12,8 @@ let timeWhenGameStarted = Date.now();
 //every time game is updated, framecount is updated by 1
 let frameCount = 0;
 
+let score = 0;
+
 const player = {
     x : 50,
     spdX : 30,
@@ -21,10 +23,14 @@ const player = {
     hp: 10,
     width: 20,
     height: 20,
-    color:"green"
+    color:"green",
+    attackSpeed: 1
 };
 //enemyList stores all the enemies in an object
 let enemyList = {};
+let upgradeList = {};
+let bulletList = {};
+
 
 
 //Distance Formula and Pythagorean Theorem
@@ -71,6 +77,97 @@ const enemy = function(id, x, y, spdX, spdY, width, height) {
     //create the item in enemyList
     enemyList[id] = enemy1;
 }
+
+const randomlyGenerateEnemy = function () {
+    let x = Math.random() * width;
+    let y = Math.random() * height;
+    let spdX = 5 + Math.random() * 5;
+    let spdY = 5 + Math.random() * 5;
+    let enemyHeight = 10 + Math.random() * 30;
+    let enemyWidth = 10 + Math.random() * 30;
+    let id = Math.random();
+    enemy(id, x, y, spdX, spdY, enemyWidth, enemyHeight);
+}
+
+//UPGRADE ENTITIES
+const upgrade = function (id, x, y, spdX, spdY, width, height, category, color) {
+    let upgrade1 = {
+        x: x,
+        spdX: spdX,
+        y: y,
+        spdY: spdY,
+        name: "U",
+        id: id,
+        width: width,
+        height: height,
+        color: color,
+        category: category
+
+
+    };
+    //create the item in upgradeList
+    upgradeList[id] = upgrade1;
+}
+
+const randomlyGenerateUpgrade = function () {
+    let x = Math.random() * width;
+    let y = Math.random() * height;
+    let spdX = 0;
+    let spdY = 0;
+    let upgradeHeight = 10;
+    let upgradeWidth = 10;
+    let id = Math.random();
+
+    let category;
+    let color; 
+
+    if(Math.random() < 0.5) {
+        category = "score";
+        color = "orange";
+    } else {
+        category = "attackSpeed";
+        color = "purple";
+    }
+    //randomly creates either a score upgrade or attackSpeed upgrade
+    upgrade(id, x, y, spdX, spdY, upgradeWidth, upgradeHeight, category, color);
+}
+
+//BULLET ENTITIES
+const bullet = function (id, x, y, spdX, spdY, width, height) {
+    let bullet1 = {
+        x: x,
+        spdX: spdX,
+        y: y,
+        spdY: spdY,
+        name: "B",
+        id: id,
+        width: width,
+        height: height,
+        color: "black",
+        //timer to count when the bullet disappears
+        timer:0
+    };
+    //create the item in upgradeList
+    bulletList[id] = bullet1;
+}
+
+const randomlyGenerateBullet = function () {
+    let x =player.x;
+    let y = player.y;
+    let bulletHeight = 10;
+    let bulletWidth = 10;
+    let id = Math.random();
+
+    let angle = Math.random()*360;
+    //converts degrees into radians
+    let spdX = Math.cos(angle/180*Math.PI)*5;
+    let spdY = Math.sin(angle/180*Math.PI)*5;
+    bullet(id, x, y, spdX, spdY, bulletWidth, bulletHeight);
+}
+
+
+
+
 
 //moves player (x and y) with mouse and makes sure it can't move out of bounds
 document.onmousemove = function(mouse) {
@@ -131,9 +228,48 @@ const update = function() {
 // clears rectangle in canvas so the fillText doesn't just repeat
     ctx.clearRect(0, 0, width, height);
     frameCount++;
+    score++;
 
     if(frameCount % 100 === 0) //updates every 4sec
         randomlyGenerateEnemy();
+    if (frameCount % 75 === 0) //updates every 3sec
+        randomlyGenerateUpgrade();
+    if (frameCount % Math.round(25/player.attackSpeed) === 0) //updates every 1sec
+        randomlyGenerateBullet();
+
+    for(let key in bulletList) {
+        updateEntity(bulletList[key]);
+
+        let toRemove = false;
+        bulletList[key].timer++;
+        if(bulletList[key].timer > 75) {
+            toRemove = true;
+        }
+
+        for(let key2 in enemyList){
+            let collision = testCollision(bulletList[key], enemyList[key2]);
+            if (collision){
+                toRemove = true;
+                delete enemyList[key2];
+                break;
+            }
+        }
+        if(toRemove){
+            delete bulletList[key];
+        }
+    }
+
+    for(let key in upgradeList) {
+        updateEntity(upgradeList[key]);
+        const collision = testCollision(player, upgradeList[key]);
+        if(collision) {
+            if (upgradeList[key].category === "score")
+                score += 1000;
+            if (upgradeList[key].category === "attackSpeed")
+                player.attackSpeed += 3;
+            delete upgradeList[key]//removes upgrade from DOM
+        }
+    }
 
 
     //loop through enemyList to update enemies
@@ -156,6 +292,7 @@ const update = function() {
 
     drawEntity(player);
     ctx.fillText(player.hp + "HP", 0, 30);
+    ctx.fillText("Score: " + score, 200, 30);
 
 }
 
@@ -163,22 +300,16 @@ const startNewGame = function () {
     player.hp = 10;
     timeWhenGameStarted = Date.now();
     frameCount = 0;
+    score = 0;
     enemyList = {};
+    upgradeList = {};
+    bulletList = {};
     randomlyGenerateEnemy();
     randomlyGenerateEnemy();
     randomlyGenerateEnemy();
 }
 
-const randomlyGenerateEnemy = function() {
-    let x = Math.random()*width;
-    let y = Math.random()*height;
-    let spdX = 5 + Math.random()*5;
-    let spdY = 5 + Math.random()*5;
-    let enemyHeight = 10 + Math.random()*30;
-    let enemyWidth = 10 + Math.random()*30;
-    let id = Math.random();
-    enemy(id, x, y, spdX, spdY, enemyWidth, enemyHeight);
-}
+
 
 startNewGame();
 
